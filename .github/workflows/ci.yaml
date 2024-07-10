@@ -1,0 +1,34 @@
+name: CI/CD for Salesforce
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Install Salesforce CLI
+      run: |
+        npm install sfdx-cli --global
+        sfdx --version
+
+    - name: Authenticate to Salesforce
+      run: |
+        echo "${{ secrets.JWT_KEY }}" > server.key
+        sfdx force:auth:jwt:grant --clientid ${{ secrets.SF_CLIENT_ID }} --jwtkeyfile server.key --username ${{ secrets.SF_USERNAME }} --instanceurl ${{ secrets.SF_LOGIN_URL }}
+      env:
+        SFDX_JSON_TO_STDOUT: "true"
+
+    - name: Deploy to Salesforce
+      run: |
+        sfdx force:source:deploy -p force-app
+
