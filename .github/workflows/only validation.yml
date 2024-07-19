@@ -1,12 +1,10 @@
-name: Validate Salesforce Metadata
+name: PR Validation for Salesforce Metadata
 
 on:
-  push:
-    branches:
-      - feature/** # Trigger validation on commits to any feature branch
   pull_request:
     branches:
-      - main # Optionally trigger validation on PRs to the main branch
+      - main # Trigger validation on PRs to the main branch
+      - develop # Optionally add other branches as needed
 
 jobs:
   validate:
@@ -23,8 +21,8 @@ jobs:
 
     - name: Authenticate to Salesforce
       run: |
-        echo ${SF_AUTH_URL} > sfdx-auth-url.txt
-        sfdx auth:sfdxurl:store ----sfdx-url-file sfdx-auth-url.txt ----set-default
+        echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
+        sfdx auth:sfdxurl:store --sfdxurlfile sfdx-auth-url.txt
 
     - name: Validate Metadata
-      run: sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --targetusername=default
+      run: sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --targetusername default
