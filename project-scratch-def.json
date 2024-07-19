@@ -1,0 +1,11 @@
+{
+    "orgName": "My Scratch Org",
+    "edition": "Developer",
+    "features": [],
+    "settings": {
+      "orgPreferenceSettings": {
+        "s1DesktopEnabled": true,
+        "selfSetPasswordInApi": true
+      }
+    }
+  }
