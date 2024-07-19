@@ -1,0 +1,31 @@
+name: Validate Salesforce Metadata
+
+on:
+  push:
+    branches:
+      - feature/** # Trigger validation on commits to any feature branch
+  pull_request:
+    branches:
+      - main # Optionally trigger validation on PRs to the main branch
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Salesforce CLI
+      uses: salesforcecli/sfdx-action@v1
+      with:
+        version: latest
+
+    - name: Authenticate to Salesforce
+      uses: amclin/sfdx-auth@v1
+      with:
+        sfdcLoginUrl: ${{ secrets.SF_LOGIN_URL }}
+        sfdxAuthUrl: ${{ secrets.SF_AUTH_URL }}
+
+    - name: Validate Metadata
+      run: sfdx force:mdapi:deploy --checkonly --deploydir=src --targetusername=MyScratchOrg
