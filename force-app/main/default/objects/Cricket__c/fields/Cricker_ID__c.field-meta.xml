@@ -5,6 +5,6 @@
     <externalId>false</externalId>
     <label>Cricker-ID</label>
     <trackHistory>false</trackHistory>
-    <trackTrending>true</trackTrending>
+    <trackTrending>false</trackTrending>
     <type>AutoNumber</type>
 </CustomField>
