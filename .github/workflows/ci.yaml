@@ -1,6 +1,6 @@
-name: CI/CD for Salesforce
+#name: CI/CD for Salesforce
 
-on:
+#on:
   push:
     branches:
       - main
