@@ -17,7 +17,7 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Set up Salesforce CLI
-      uses: forcedotcom/salesforcedx-github-action@v1.1.0
+      uses: sfdx-actions/setup-sfdx@v1
       with:
         version: latest
 
