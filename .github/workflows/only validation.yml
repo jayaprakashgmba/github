@@ -24,7 +24,7 @@ jobs:
     - name: Authenticate to Salesforce
       run: |
         echo ${SF_AUTH_URL} > sfdx-auth-url.txt
-        sfdx auth:sfdxurl:store ----sfdx-url-file | -f sfdx-auth-url.txt ----set-default | -s
+        sfdx auth:sfdxurl:store ----sfdx-url-file sfdx-auth-url.txt ----set-default
 
     - name: Validate Metadata
       run: sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --targetusername=default
