@@ -6,7 +6,6 @@ on:
       - main # Trigger validation on PRs to the main branch
       - Dev
       - QAT
-      - Prod
 
 jobs:
   validate:
