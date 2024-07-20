@@ -4,6 +4,9 @@ on:
   pull_request:
     branches:
       - main # Trigger validation on PRs to the main branch
+      - Dev
+      - QAT
+      - Prod
 
 jobs:
   validate:
@@ -17,6 +20,9 @@ jobs:
       uses: sfdx-actions/setup-sfdx@v1
       with:
         version: latest
+
+    - name: Print environment variables
+      run: printenv
 
     - name: Authenticate to Salesforce
       run: |
