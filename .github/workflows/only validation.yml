@@ -17,6 +17,9 @@ jobs:
       uses: sfdx-actions/setup-sfdx@v1
       with:
         version: latest
+        
+    - name: Print environment variables
+      run: printenv
 
     - name: Authenticate to Salesforce
       run: |
