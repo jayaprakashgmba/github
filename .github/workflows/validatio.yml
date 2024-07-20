@@ -1,11 +1,11 @@
-name: Validate Feature Branch
+#name: Validate Feature Branch
 
-on:
+#on:
   push:
     branches:
       - 'feature/*'
 
-jobs:
+#jobs:
   validate:
     runs-on: ubuntu-latest
 

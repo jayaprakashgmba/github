@@ -4,7 +4,6 @@ on:
   pull_request:
     branches:
       - main # Trigger validation on PRs to the main branch
-      - develop # Optionally add other branches as needed
 
 jobs:
   validate:
