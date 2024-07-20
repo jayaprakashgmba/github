@@ -25,4 +25,4 @@ jobs:
         sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt
 
     - name: Validate Metadata
-      run: sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --targetusername default
+      run: sfdx force:source:deploy --checkonly --sourcepath force-app/main/default ----target-org  default
