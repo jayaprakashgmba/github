@@ -14,6 +14,20 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Install Salesforce CLI
+      run: |
+        npm install @salesforce/cli --global
+        sf --help
+        pip install xq
+        pip install yq
+
+    - name: Install sfdxGit delta
+      run: |
+        echo y | sf plugins install sfdx-git-delta
+        sf sgd:source:delta --to "HEAD" --from "HEAD~1" --output "." --igonre .github/workflows/ignore.txt
+        cat package/package.xml
+
+
     - name: Set up Salesforce CLI
       uses: sfdx-actions/setup-sfdx@v1
       with:
