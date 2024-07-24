@@ -32,6 +32,11 @@ jobs:
     - name: Validate Metadata
       run: sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org jp@sunsolutions.com
 
+    - name: Read Test Classes from File
+      run: |
+        TEST_CLASSES=$(cat test-classes.txt)
+        echo "Test classes: $TEST_CLASSES"
+
     - name: Run Apex Tests
       run: |
-        sfdx force:apex:test:run --result-format human --target-org jp@sunsolutions.com
+        sfdx force:apex:test:run --result-format human --target-org jp@sunsolutions.com --testclasses $TEST_CLASSES
