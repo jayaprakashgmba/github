@@ -29,9 +29,6 @@ jobs:
         echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
         sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt
 
-    - name: Validate Metadata
-      run: sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org jp@sunsolutions.com
-
     - name: Read Test Classes from File
       run: |
         TEST_CLASSES=$(cat test-classes.txt)
@@ -39,4 +36,7 @@ jobs:
 
     - name: Run Apex Tests
       run: |
-        sfdx force:apex:test:run --result-format human --target-org jp@sunsolutions.com --testclasses $TEST_CLASSES
+        sfdx apex run test --result-format human --target-org jp@sunsolutions.com --testclasses $TEST_CLASSES
+
+    - name: Validate Metadata
+      run: sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org jp@sunsolutions.com
