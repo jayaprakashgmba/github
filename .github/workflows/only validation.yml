@@ -36,7 +36,7 @@ jobs:
 
     - name: Run Apex Tests
       run: |
-        sfdx force:apex:test:run --result-format human --target-org jp@sunsolutions.com --classes $TEST_CLASSES
+        sfdx apex:run:test --result-format human --target-org jp@sunsolutions.com --classes $TEST_CLASSES
 
     - name: Validate Metadata
       run: sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org jp@sunsolutions.com
