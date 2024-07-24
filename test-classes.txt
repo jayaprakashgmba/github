@@ -1,1 +1,2 @@
-AccountServiceTest,DashboardPalTest
+AccountServiceTest
+DashboardPalTest
