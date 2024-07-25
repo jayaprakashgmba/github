@@ -1,0 +1,62 @@
+name: PR Validation for Salesforce Metadata
+
+on:
+  pull_request:
+    branches:
+      - main
+      - QA
+      
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Salesforce CLI
+        uses: sfdx-actions/setup-sfdx@v1
+        with:
+          version: latest
+
+      - name: Print environment variables
+        run: printenv
+
+      - name: Authenticate to Salesforce
+        run: |
+          echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
+          sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt
+
+      - name: Validate Metadata
+        run: sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org jp@sunsolutions.com
+
+  run-tests:
+    runs-on: ubuntu-latest
+
+    needs: validate  # Ensure 'validate' job completes first
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Salesforce CLI
+        uses: sfdx-actions/setup-sfdx@v1
+        with:
+          version: latest
+
+      - name: Print environment variables
+        run: printenv
+
+      - name: Authenticate to Salesforce
+        run: |
+          echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
+          sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt
+
+      - name: Read Test Class Names from File
+        id: read-test-classes
+        run: echo ::set-output name=test_classes::$(cat test-classes.txt)
+
+      - name: Run Specific Apex Tests
+        run: |
+          sfdx force:apex:test:run -n "${{ steps.read-test-classes.outputs.test_classes }}" -r human -u jp@sunsolutions.com
