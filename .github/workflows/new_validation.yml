@@ -5,7 +5,6 @@ on:
     branches:
       - main
       - QA
-      
 
 jobs:
   validate:
@@ -38,7 +37,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/cat C:\Users\Jayaprakash\Downloads\test code\github\.github\workflows\test-classes.txt
 
       - name: Set up Salesforce CLI
         uses: sfdx-actions/setup-sfdx@v1
@@ -55,8 +54,8 @@ jobs:
 
       - name: Read Test Class Names from File
         id: read-test-classes
-        run: echo ::set-output name=test_classes::$(cat test-classes.txt)
+        run: echo "TEST_CLASSES=$(cat test-classes.txt)" >> $GITHUB_ENV
 
       - name: Run Specific Apex Tests
         run: |
-          sfdx force:apex:test:run -n "${{ steps.read-test-classes.outputs.test_classes }}" -r human -u jp@sunsolutions.com
+          sfdx force:apex:test:run -n "$TEST_CLASSES" -r human -u jp@sunsolutions.com
