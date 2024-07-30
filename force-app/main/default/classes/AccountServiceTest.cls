@@ -40,6 +40,5 @@ public class AccountServiceTest {
             // Expected exception, check error message
             System.assert(e.getMessage().contains('required fields'), 'Error message should indicate required fields');
         }
-        ////wetgsagvdfgf
     }
 }
