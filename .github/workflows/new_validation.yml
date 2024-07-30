@@ -52,9 +52,14 @@ jobs:
           echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
           sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt
 
+      - name: Debug Test Classes File
+        run: cat test-classes.txt
+
       - name: Read Test Class Names from File
         id: read-test-classes
-        run: echo "TEST_CLASSES=$(cat test-classes.txt)" >> $GITHUB_ENV
+        run: |
+          TEST_CLASSES=$(cat test-classes.txt | tr '\n' ',' | sed 's/,$//')
+          echo "TEST_CLASSES=$TEST_CLASSES" >> $GITHUB_ENV
 
       - name: Run Specific Apex Tests
         run: |
