@@ -37,7 +37,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/cat C:\Users\Jayaprakash\Downloads\test code\github\.github\workflows\test-classes.txt
+        uses: actions/checkout@v2
 
       - name: Set up Salesforce CLI
         uses: sfdx-actions/setup-sfdx@v1
