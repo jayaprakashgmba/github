@@ -42,6 +42,6 @@ jobs:
 
 
       - name: Validate Metadata
-        run: sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org jp@sunsolutions.com
+        run: sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org jp@sunsolutions.com --testlevel RunSpecifiedTests --runtests "$TEST_CLASSES"
 
   
