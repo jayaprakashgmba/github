@@ -4,7 +4,7 @@
     <displayFormat>AP-{0000}</displayFormat>
     <externalId>false</externalId>
     <label>Cricker-ID</label>
-    <trackHistory>true</trackHistory>
-    <trackTrending>false</trackTrending>
+    <trackHistory>fals</trackHistory>
+    <trackTrending>fals</trackTrending>
     <type>AutoNumber</type>
 </CustomField>
