@@ -38,7 +38,7 @@ jobs:
 
       - name: Run Specific Apex Tests
         run: |
-          sfdx apexrun:test -n "$TEST_CLASSES" -r human --target-org jp@sunsolutions.com
+          sfdx apex:run:test -n "$TEST_CLASSES" -r human --target-org jp@sunsolutions.com
 
 
       - name: Validate Metadata
