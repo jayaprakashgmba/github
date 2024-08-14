@@ -3,13 +3,14 @@ name: PR Validation for Salesforce Metadata
 on:
   pull_request:
     branches:
-      - Dev
+      - QA
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
       - name: Set up Salesforce CLI
         uses: sfdx-actions/setup-sfdx@v1
         with:
