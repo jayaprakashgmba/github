@@ -66,4 +66,5 @@ jobs:
           sfdx force:source:deploy --checkonly --sourcepath force-app/main/default
           --target-org jp@sunsolutions.com  --testlevel RunSpecifiedTests
           --runtests "${{ env.APEX_CLASSES }}"
+//test
 
