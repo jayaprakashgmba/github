@@ -4,11 +4,10 @@ on:
   pull_request:
     branches:
       - Dev
-
+      
 jobs:
   validate:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -25,7 +24,7 @@ jobs:
         run: |
           echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
           sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt
-		  
+
       - name: Detect Changed Files
         id: changed-files
         run: |
@@ -36,10 +35,13 @@ jobs:
 
       - name: Filter Apex and Metadata Files
         id: filter-files
-        run: |
-          APEX_CLASSES=$(echo "$CHANGED_FILES" | grep -E '\.cls$|\.trigger$|\.page$|\.component$' || true)
+        run: >
+          APEX_CLASSES=$(echo "$CHANGED_FILES" | grep -E
+          '\.cls$|\.trigger$|\.page$|\.component$' || true)
+
           META_FILES=$(echo "$CHANGED_FILES" | grep -E '\.xml$' || true)
-          
+
+
           if [ -z "$APEX_CLASSES" ] && [ -z "$META_FILES" ]; then
             echo "VALIDATE=false" >> $GITHUB_ENV
           else:
@@ -47,14 +49,17 @@ jobs:
             echo "APEX_CLASSES=$APEX_CLASSES" >> $GITHUB_ENV
             echo "META_FILES=$META_FILES" >> $GITHUB_ENV
           fi
-
+          
       - name: Run Apex Tests
         if: env.VALIDATE == 'true' && env.APEX_CLASSES != ''
-        run: |
+        run: >
           TEST_CLASSES=$(echo "${{ env.APEX_CLASSES }}" | tr '\n' ',' | sed 's/,$//')
-          sfdx force:apex:test:run -n $TEST_CLASSES -r human -u atul@crm.dev
+
+          sfdx force:apex:test:run -n $TEST_CLASSES -r human -u jp@sunsolutions.com 
 
       - name: Validate Metadata
         if: env.VALIDATE == 'true'
-        run: |
-          sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org atul@crm.dev --testlevel RunSpecifiedTests --runtests "${{ env.APEX_CLASSES }}"
+        run: >
+          sfdx force:source:deploy --checkonly --sourcepath force-app/main/default
+          --target-org jp@sunsolutions.com  --testlevel RunSpecifiedTests
+          --runtests "${{ env.APEX_CLASSES }}"
