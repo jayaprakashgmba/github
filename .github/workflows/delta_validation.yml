@@ -52,9 +52,9 @@ jobs:
         if: env.VALIDATE == 'true' && env.APEX_CLASSES != ''
         run: |
           TEST_CLASSES=$(echo "${{ env.APEX_CLASSES }}" | tr '\n' ',' | sed 's/,$//')
-          sfdx force:apex:test:run -n $TEST_CLASSES -r human -u atul@crm.dev
+          sfdx force:apex:test:run -n $TEST_CLASSES -r human -u jp@sunsolutions.com 
 
       - name: Validate Metadata
         if: env.VALIDATE == 'true'
         run: |
-          sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org atul@crm.dev --testlevel RunSpecifiedTests --runtests "${{ env.APEX_CLASSES }}"
+          sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org jp@sunsolutions.com  --testlevel RunSpecifiedTests --runtests "${{ env.APEX_CLASSES }}"
