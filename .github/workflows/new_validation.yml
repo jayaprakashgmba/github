@@ -1,7 +1,7 @@
-name: PR Validation for Salesforce Metadata
+#name: PR Validation for Salesforce Metadata
 
-on:
-  pull_request:
+#on:
+  #pull_request:
     branches:
       - main
       - UAT
