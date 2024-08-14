@@ -3,10 +3,8 @@ name: PR Validation for Salesforce Metadata
 on:
   pull_request:
     branches:
-      - main
-      - UAT
       - QA
-      - DEV
+      
 
 jobs:
   validate:
@@ -53,7 +51,7 @@ jobs:
         id: changed-files
         run: |
           git fetch origin
-          CHANGED_FILES=$(git diff --name-only origin/main..HEAD)
+          CHANGED_FILES=$(git diff --name-only origin/QA..HEAD)
           echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
           echo "$CHANGED_FILES"
           
