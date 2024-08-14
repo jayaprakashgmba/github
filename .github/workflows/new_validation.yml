@@ -47,30 +47,11 @@ jobs:
         run: |
           sfdx force:apex:test:run -n ${{ env.TEST_CLASSES }} -r human -u jp@sunsolutions.com
 
-      - name: Detect Changed Files
-        id: changed-files
+      - name: Install sfdxGit delta
         run: |
-          git fetch origin
-          CHANGED_FILES=$(git diff --name-only origin/QA..HEAD)
-          echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
-          echo "$CHANGED_FILES"
-          
-      - name: Filter Apex and Metadata Files
-        id: filter-files
-        run: >
-          APEX_CLASSES=$(echo "$CHANGED_FILES" | grep -E
-          '\.cls$|\.trigger$|\.page$|\.component$' || true)
-
-          META_FILES=$(echo "$CHANGED_FILES" | grep -E '\.xml$' || true)
-
-
-          if [ -z "$APEX_CLASSES" ] && [ -z "$META_FILES" ]; then
-            echo "VALIDATE=false" >> $GITHUB_ENV
-          else:
-            echo "VALIDATE=true" >> $GITHUB_ENV
-            echo "APEX_CLASSES=$APEX_CLASSES" >> $GITHUB_ENV
-            echo "META_FILES=$META_FILES" >> $GITHUB_ENV
-          fi
+          echo y | sf plugins install sfdx-git-delta
+          sf sgd:source:delta --to "HEAD" --from "HEAD~1"  --output "." --ignore .github/workflows/ignore.txt
+          cat package/package.xml
           
       - name: Run Apex Tests
         if: env.VALIDATE == 'true' && env.APEX_CLASSES != ''
