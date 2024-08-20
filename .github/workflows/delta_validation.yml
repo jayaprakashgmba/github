@@ -27,10 +27,20 @@ jobs:
       - name: Get List of Changed Files
         id: get-changed-files
         run: |
+          git fetch origin
+          BASE_SHA=${{ github.event.pull_request.base.sha }}
+          HEAD_SHA=${{ github.sha }}
+    
+          if [ -z "$BASE_SHA" ] || [ -z "$HEAD_SHA" ]; then
+            echo "Unable to determine base or head commit SHA."
+            exit 1
+          fi
+
           # Get a list of files changed between the base and head of the PR
-          CHANGED_FILES=$(git diff --name-only origin/main..HEAD ${{ github.event.pull_request.base.sha }} ${{ github.sha }})
+          CHANGED_FILES=$(git diff --name-only $BASE_SHA $HEAD_SHA)
           echo "Changed files: $CHANGED_FILES"
           echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
+
 
       - name: Filter Changed Salesforce Files and Validate Metadata
         run: |
