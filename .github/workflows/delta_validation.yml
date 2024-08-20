@@ -3,8 +3,7 @@ name: PR Validation for Changed Files and Apex Tests
 on:
   pull_request:
     branches:
-      - QA  # Trigger for PRs targeting the Dev branch
-
+      - QA  # Trigger for PRs targeting the QA branch
 
 jobs:
   validate:
@@ -13,6 +12,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Fetch all history to ensure all commits are available
 
       - name: Set up Salesforce CLI
         uses: sfdx-actions/setup-sfdx@v1
@@ -27,20 +28,13 @@ jobs:
       - name: Get List of Changed Files
         id: get-changed-files
         run: |
-          git fetch origin
-          BASE_SHA=${{ github.event.pull_request.base.sha }}
-          HEAD_SHA=${{ github.sha }}
-    
-          if [ -z "$BASE_SHA" ] || [ -z "$HEAD_SHA" ]; then
-            echo "Unable to determine base or head commit SHA."
-            exit 1
-          fi
+          # Fetch the QA branch to ensure we have the latest changes
+          git fetch origin QA:QA
 
-          # Get a list of files changed between the base and head of the PR
-          CHANGED_FILES=$(git diff --name-only $BASE_SHA $HEAD_SHA)
+          # Get a list of files changed between the QA branch and the current branch
+          CHANGED_FILES=$(git diff --name-only origin/QA ${{ github.sha }})
           echo "Changed files: $CHANGED_FILES"
           echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
-
 
       - name: Filter Changed Salesforce Files and Validate Metadata
         run: |
