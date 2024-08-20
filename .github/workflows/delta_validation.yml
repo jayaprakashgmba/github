@@ -28,7 +28,7 @@ jobs:
         id: get-changed-files
         run: |
           # Get a list of files changed between the base and head of the PR
-          CHANGED_FILES=$(git diff  ${{ github.event.pull_request.base.sha }} ${{ github.sha }})
+          CHANGED_FILES=$(git diff --name-only origin/main..HEAD ${{ github.event.pull_request.base.sha }} ${{ github.sha }})
           echo "Changed files: $CHANGED_FILES"
           echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
 
