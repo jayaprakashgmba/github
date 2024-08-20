@@ -28,17 +28,13 @@ jobs:
       - name: Get List of Changed Files
         id: get-changed-files
         run: |
-          # Fetch the QA branch to ensure we have the latest changes
           git fetch origin QA:QA
-
-          # Get a list of files changed between the QA branch and the current branch
           CHANGED_FILES=$(git diff --name-only origin/QA ${{ github.sha }})
           echo "Changed files: $CHANGED_FILES"
           echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
 
       - name: Filter Changed Salesforce Files and Validate Metadata
         run: |
-          # Loop through the changed files and validate only Salesforce metadata
           for file in ${{ env.CHANGED_FILES }}; do
             if [[ $file == force-app/main/default/* ]]; then
               echo "Validating changed Salesforce file: $file"
@@ -52,33 +48,24 @@ jobs:
       - name: Pick Test Classes from Changed Apex Files
         id: pick-test-classes
         run: |
-          # Initialize test classes variable
           TEST_CLASSES=""
-          
-          # Loop through changed files and identify Apex classes
           for file in ${{ env.CHANGED_FILES }}; do
             if [[ $file == force-app/main/default/classes/* ]]; then
-              CLASS_NAME=$(basename $file .cls)  # Strip path and .cls extension to get the class name
+              CLASS_NAME=$(basename "$file" .cls)
               echo "Detected changed Apex class: $CLASS_NAME"
-              
-              # Append to test class list if it has a corresponding test class
               if [[ -f "force-app/main/default/classes/${CLASS_NAME}Test.cls" ]]; then
+                echo "Adding ${CLASS_NAME}Test to the list of test classes."
                 TEST_CLASSES="${TEST_CLASSES},${CLASS_NAME}Test"
               fi
             fi
           done
-
-          # Remove the leading comma if there are test classes
-          TEST_CLASSES=$(echo $TEST_CLASSES | sed 's/^,//')
-
-          # Set the environment variable for the test classes
-          echo "TEST_CLASSES=$TEST_CLASSES" >> $GITHUB_ENV
-
-          # Determine if tests should be run
-          if [[ -z "$TEST_CLASSES" ]]; then
-            echo "RUN_TESTS=false" >> $GITHUB_ENV
-          else
+          if [[ -n "$TEST_CLASSES" ]]; then
+            TEST_CLASSES=${TEST_CLASSES#,}
+            echo "TEST_CLASSES=$TEST_CLASSES" >> $GITHUB_ENV
             echo "RUN_TESTS=true" >> $GITHUB_ENV
+          else
+            echo "No test classes found."
+            echo "RUN_TESTS=false" >> $GITHUB_ENV
           fi
         shell: bash
 
