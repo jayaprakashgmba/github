@@ -5,6 +5,7 @@ on:
     branches:
       - QA  # Trigger for PRs targeting the Dev branch
 
+
 jobs:
   validate:
     runs-on: ubuntu-latest
