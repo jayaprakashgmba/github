@@ -3,7 +3,7 @@ name: PR Validation for Salesforce Metadata
 on:
   pull_request:
     branches:
-      - Dev
+      - QA
  
 jobs:
   validate:
@@ -44,12 +44,12 @@ jobs:
       - name: Run Specific Apex Tests
         if: env.RUN_TESTS == 'true'
         run: |
-          sfdx force:apex:test:run -n ${{ env.TEST_CLASSES }} -r human -u atul@crm.dev
+          sfdx force:apex:test:run -n ${{ env.TEST_CLASSES }} -r human -u jp@sunsolutions.com
  
       - name: Validate Metadata
         run: |
           if [ "${{ env.RUN_TESTS }}" == "true" ]; then
-            sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org atul@crm.dev --testlevel RunSpecifiedTests --runtests "${{ env.TEST_CLASSES }}"
+            sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org jp@sunsolutions.com --testlevel RunSpecifiedTests --runtests "${{ env.TEST_CLASSES }}"
           else
-            sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org atul@crm.dev --testlevel NoTestRun
+            sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org jp@sunsolutions.com --testlevel NoTestRun
           fi
