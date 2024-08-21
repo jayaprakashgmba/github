@@ -35,7 +35,7 @@ jobs:
 
       - name: Filter Changed Salesforce Files and Validate Metadata
         run: |
-          for file in ${{ QA.CHANGED_FILES }}; do
+          for file in ${{ env.CHANGED_FILES }}; do
             if [[ $file == force-app/main/default/* ]]; then
               echo "Validating changed Salesforce file: $file"
               sfdx force:source:deploy --checkonly --sourcepath $file --target-org jp@sunsolutions.com --testlevel NoTestRun
@@ -49,7 +49,7 @@ jobs:
         id: pick-test-classes
         run: |
           TEST_CLASSES=""
-          for file in ${{ QA.CHANGED_FILES }}; do
+          for file in ${{ env.CHANGED_FILES }}; do
             if [[ $file == force-app/main/default/classes/* ]]; then
               CLASS_NAME=$(basename "$file" .cls)
               echo "Detected changed Apex class: $CLASS_NAME"
@@ -70,13 +70,13 @@ jobs:
         shell: bash
 
       - name: Run Specific Apex Tests
-        if: RUN_TESTS == 'true'
+        if: env.RUN_TESTS == 'true'
         run: |
-          echo "Running Apex tests for classes: ${{ QA.TEST_CLASSES }}"
-          sfdx force:apex:test:run -n ${{ QA.TEST_CLASSES }} -r human -u jp@sunsolutions.com
+          echo "Running Apex tests for classes: ${{ env.TEST_CLASSES }}"
+          sfdx force:apex:test:run -n ${{ env.TEST_CLASSES }} -r human -u jp@sunsolutions.com
 
       - name: Fallback - Run Full Metadata Validation If No Tests Are Found
-        if: RUN_TESTS == 'false'
+        if: env.RUN_TESTS == 'false'
         run: |
           echo "No specific tests to run, validating all metadata."
           sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org jp@sunsolutions.com --testlevel NoTestRun
