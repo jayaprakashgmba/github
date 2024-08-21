@@ -25,11 +25,6 @@ jobs:
         run: |
           echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
           sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt
-
-      - name: Generate Test Classes File (Example)
-        run: |
-          # Generate test-classes.txt by extracting class names from changed Apex files
-          git diff --name-only origin/${{ github.event.pull_request.base.ref }} ${{ github.sha }} | grep 'force-app/main/default/classes/' | sed 's/.*\///;s/.cls//' > test-classes.txt
           
       - name: Debug Test Classes File
         run: cat test-classes.txt
