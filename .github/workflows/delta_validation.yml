@@ -1,82 +1,55 @@
-name: PR Validation delta changes
-
+name: PR Validation for Salesforce Metadata
+ 
 on:
   pull_request:
     branches:
-      - QA  # Trigger for PRs targeting the QA branch
-
+      - Dev
+ 
 jobs:
   validate:
     runs-on: ubuntu-latest
-
+ 
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
+ 
       - name: Set up Salesforce CLI
         uses: sfdx-actions/setup-sfdx@v1
         with:
           version: latest
-
-      - name: Authenticate to Salesforce
+ 
+      - name: Print environment variables
+        run: printenv
+ 
+        - name: Authenticate to Salesforce
         run: |
-          echo "${{ secrets.SF_AUTH_URL }}" > sfdx-auth-url.txt
+          echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
           sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt
-
-      - name: Get List of Changed Files
-        id: get-changed-files
+ 
+      - name: Debug Test Classes File
+        run: cat test-classes.txt
+ 
+      - name: Read Test Class Names from File
+        id: read-test-classes
         run: |
-          git fetch origin QA:QA
-          CHANGED_FILES=$(git diff --name-only origin/QA ${{ github.sha }})
-          echo "Changed files: $CHANGED_FILES"
-          echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
-
-      - name: Filter Changed Salesforce Files and Validate Metadata
-        run: |
-          for file in ${{ env.CHANGED_FILES }}; do
-            if [[ $file == force-app/main/default/* ]]; then
-              echo "Validating changed Salesforce file: $file"
-              sfdx force:source:deploy --checkonly --sourcepath $file --target-org jp@sunsolutions.com --testlevel NoTestRun
-            else
-              echo "Skipping file: $file (Not Salesforce metadata)"
-            fi
-          done
-        shell: bash
-
-      - name: Pick Test Classes from Changed Apex Files
-        id: pick-test-classes
-        run: |
-          TEST_CLASSES=""
-          for file in ${{ env.CHANGED_FILES }}; do
-            if [[ $file == force-app/main/default/classes/* ]]; then
-              CLASS_NAME=$(basename "$file" .cls)
-              echo "Detected changed Apex class: $CLASS_NAME"
-              if [[ -f "force-app/main/default/classes/${CLASS_NAME}Test.cls" ]]; then
-                echo "Adding ${CLASS_NAME}Test to the list of test classes."
-                TEST_CLASSES="${TEST_CLASSES},${CLASS_NAME}Test"
-              fi
-            fi
-          done
-          if [[ -n "$TEST_CLASSES" ]]; then
-            TEST_CLASSES=${TEST_CLASSES#,}
-            echo "TEST_CLASSES='$TEST_CLASSES'" >> $GITHUB_ENV
-            echo "RUN_TESTS=true" >> $GITHUB_ENV
-          else
-            echo "No test classes found."
+          TEST_CLASSES=$(cat test-classes.txt | tr '\n' ',' | sed 's/,$//')
+          if [ -z "$TEST_CLASSES" ]; then
+            echo "TEST_CLASSES=" >> $GITHUB_ENV
             echo "RUN_TESTS=false" >> $GITHUB_ENV
+          else
+            echo "TEST_CLASSES=$TEST_CLASSES" >> $GITHUB_ENV
+            echo "RUN_TESTS=true" >> $GITHUB_ENV
           fi
-        shell: bash
-
+ 
       - name: Run Specific Apex Tests
         if: env.RUN_TESTS == 'true'
         run: |
-          echo "Running Apex tests for classes: ${{ env.TEST_CLASSES }}"
-          sfdx force:apex:test:run -n ${{ env.TEST_CLASSES }} -r human -u jp@sunsolutions.com
-
-      - name: Fallback - Run Full Metadata Validation If No Tests Are Found
-        if: env.RUN_TESTS == 'false'
+          sfdx force:apex:test:run -n ${{ env.TEST_CLASSES }} -r human -u atul@crm.dev
+ 
+      - name: Validate Metadata
         run: |
-          echo "No specific tests to run, validating all metadata."
-          sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org jp@sunsolutions.com --testlevel NoTestRun
+          if [ "${{ env.RUN_TESTS }}" == "true" ]; then
+            sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org atul@crm.dev --testlevel RunSpecifiedTests --runtests "${{ env.TEST_CLASSES }}"
+          else
+            sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org atul@crm.dev --testlevel NoTestRun
+          fi
