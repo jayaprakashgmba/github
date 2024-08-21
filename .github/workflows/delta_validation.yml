@@ -1,34 +1,39 @@
 name: PR Validation for Salesforce Metadata
- 
+
 on:
   pull_request:
     branches:
       - QA
- 
+
 jobs:
   validate:
     runs-on: ubuntu-latest
- 
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
- 
+
       - name: Set up Salesforce CLI
         uses: sfdx-actions/setup-sfdx@v1
         with:
           version: latest
- 
+
       - name: Print environment variables
         run: printenv
- 
+
       - name: Authenticate to Salesforce
         run: |
           echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
           sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt
- 
+
+      - name: Generate Test Classes File (Example)
+        run: |
+          # Generate test-classes.txt by extracting class names from changed Apex files
+          git diff --name-only origin/${{ github.event.pull_request.base.ref }} ${{ github.sha }} | grep 'force-app/main/default/classes/' | sed 's/.*\///;s/.cls//' > test-classes.txt
+          
       - name: Debug Test Classes File
         run: cat test-classes.txt
- 
+
       - name: Read Test Class Names from File
         id: read-test-classes
         run: |
@@ -40,12 +45,12 @@ jobs:
             echo "TEST_CLASSES=$TEST_CLASSES" >> $GITHUB_ENV
             echo "RUN_TESTS=true" >> $GITHUB_ENV
           fi
- 
+
       - name: Run Specific Apex Tests
         if: env.RUN_TESTS == 'true'
         run: |
           sfdx force:apex:test:run -n ${{ env.TEST_CLASSES }} -r human -u jp@sunsolutions.com
- 
+
       - name: Validate Metadata
         run: |
           if [ "${{ env.RUN_TESTS }}" == "true" ]; then
