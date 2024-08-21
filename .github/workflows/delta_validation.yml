@@ -13,7 +13,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0  # Fetch all history to ensure all commits are available
+          fetch-depth: 0
 
       - name: Set up Salesforce CLI
         uses: sfdx-actions/setup-sfdx@v1
@@ -61,7 +61,7 @@ jobs:
           done
           if [[ -n "$TEST_CLASSES" ]]; then
             TEST_CLASSES=${TEST_CLASSES#,}
-            echo "TEST_CLASSES=$TEST_CLASSES" >> $GITHUB_ENV
+            echo "TEST_CLASSES='$TEST_CLASSES'" >> $GITHUB_ENV
             echo "RUN_TESTS=true" >> $GITHUB_ENV
           else
             echo "No test classes found."
