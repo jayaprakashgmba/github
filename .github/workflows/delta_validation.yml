@@ -46,14 +46,7 @@ jobs:
         if: env.RUN_TESTS == 'true'
         run: |
           sfdx force:apex:test:run -n ${{ env.TEST_CLASSES }} -r human -u jp@sunsolutions.com
-      
-      - name: Install Salesforce CLI
-        run: |
-            npm install @salesforce/cli --global
-            sf --help
-            pip install xq
-            pip install yq
-            
+
       - name: Install sfdxGit delta
         run: |
             echo y | sf plugins install sfdx-git-delta
