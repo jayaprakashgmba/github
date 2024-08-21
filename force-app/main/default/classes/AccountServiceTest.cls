@@ -38,7 +38,7 @@ public class AccountServiceTest {
             System.assert(false, 'Exception should be thrown for empty names');
         } catch (DmlException e) {
             // Expected exception, check error message
-            System.assert(e.getMessage().contains('required fields'), 'Error message should indicate required fields');
+            System.assert(e.getMessage().contains('required fields'), 'Error message should indicate required fields and objects');
         }
        // Call the method to testdfawdWFD  
        /// other method following 
