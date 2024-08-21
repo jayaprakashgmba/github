@@ -12,43 +12,20 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0  # Ensure full history is fetched
 
       - name: Set up Salesforce CLI
         uses: sfdx-actions/setup-sfdx@v1
         with:
           version: latest
 
+      - name: Print environment variables
+        run: printenv
+
       - name: Authenticate to Salesforce
         run: |
           echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
           sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt
 
-      - name: Get List of Changed Files
-        id: get-changed-files
-        run: |
-          # Compare the current branch with the base branch (QA) to get a list of changed files
-          CHANGED_FILES=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }} ${{ github.sha }})
-          echo "Changed files: $CHANGED_FILES"
-          echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
-
-      - name: Validate Only Changed Salesforce Files
-        run: |
-          for file in ${{ env.CHANGED_FILES }}; do
-            if [[ $file == force-app/main/default/* ]]; then
-              echo "Validating Salesforce file: $file"
-              sfdx force:source:deploy --checkonly --sourcepath $file --target-org ${{ secrets.SF_AUTH_URL }} --testlevel NoTestRun
-            else
-              echo "Skipping non-Salesforce file: $file"
-            fi
-          done
-        shell: bash
-
-      - name: Generate Test Classes File
-        run: |
-          # Generate test-classes.txt by extracting class names from changed Apex files
-          echo "${{ env.CHANGED_FILES }}" | tr ' ' '\n' | grep 'force-app/main/default/classes/' | sed 's/.*\///;s/.cls//' > test-classes.txt
           
       - name: Debug Test Classes File
         run: cat test-classes.txt
@@ -69,6 +46,19 @@ jobs:
         if: env.RUN_TESTS == 'true'
         run: |
           sfdx force:apex:test:run -n ${{ env.TEST_CLASSES }} -r human -u jp@sunsolutions.com
+      
+      - name: Install Salesforce CLI
+        run: |
+            npm install @salesforce/cli --global
+            sf --help
+            pip install xq
+            pip install yq
+            
+      - name: Install sfdxGit delta
+        run: |
+            echo y | sf plugins install sfdx-git-delta
+            sf sgd:source:delta --to "HEAD" --from "HEAD~1"  --output "." --ignore .github/workflows/ignore.txt
+            cat package/package.xml
 
       - name: Validate Metadata
         run: |
