@@ -29,9 +29,12 @@ jobs:
       - name: Install sfdxGit delta
         run: |
             echo y | sf plugins install sfdx-git-delta
+
+      - name: Generate Delta Package
+        run: |
             sf sgd:source:delta --to "HEAD" --from "HEAD~1"  --output "." --ignore .github/workflows/ignore.txt
             cat package/package.xml 
-               
+
       - name: Debug Test Classes File
         run: cat test-classes.txt
 
