@@ -30,6 +30,13 @@ jobs:
         run: |
             echo y | sf plugins install sfdx-git-delta
 
+      - name: Ensure Previous Commit Exists
+        run: |
+            git fetch --deepen=1 # Fetch at least one more commit if HEAD~1 does not exist
+            if ! git rev-parse HEAD~1; then
+              echo "No previous commit (HEAD~1) found. Ensure the fetch depth is set correctly."
+              exit 1
+            fi
       - name: Generate Delta Package
         run: |
             sf sgd:source:delta --to "HEAD" --from "HEAD~1"  --output "." --ignore .github/workflows/ignore.txt
