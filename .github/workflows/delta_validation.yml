@@ -51,7 +51,7 @@ jobs:
         run: |
             echo y | sf plugins install sfdx-git-delta
             sf sgd:source:delta --to "HEAD" --from "HEAD~1"  --output "." --ignore .github/workflows/ignore.txt
-            cat package/package.xml
+            
 
       - name: Validate Metadata
         run: |
