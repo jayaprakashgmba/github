@@ -3,7 +3,7 @@ name: PR Validation for Salesforce Metadata
 on:
   pull_request:
     branches:
-      - QA
+      - jp5
 
 jobs:
   validate:
