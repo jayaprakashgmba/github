@@ -8,7 +8,6 @@ public class MySampleApexClass {       //Class definition and body
       myValue = myValue+10;
       return myValue;
 
-      /// delta pacakage testing version1
-      ///append some data
+      //// no need to add any thing
    }
 }
