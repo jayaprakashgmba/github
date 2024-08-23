@@ -54,14 +54,6 @@ jobs:
             sf sgd:source:delta --to "HEAD" --from "HEAD~1"  --output "." --ignore .github/workflows/ignore.txt
             cat package/package.xml 
 
-      - name: Debug Test Classes File
-        run: cat test-classes.txt
-
-      - name: Run Specific Apex Tests
-        if: env.RUN_TESTS == 'true'
-        run: |
-          sfdx force:apex:test:run -n ${{ env.TEST_CLASSES }} -r human -u jp@sunsolutions.com
-
       - name: Validate Metadata
         run: |
           if [ "${{ env.RUN_TESTS }}" == "true" ]; then
