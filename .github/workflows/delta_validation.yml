@@ -1,63 +1,51 @@
-name: PR Validation for Salesforce Metadata
+name: QA Br to Fullcopy Deploy
 
-on:
+on: 
   pull_request:
     branches:
-      - jp5
+      - QA
 
 jobs:
-  validate:
+  SFDX-CLI-Deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Salesforce CLI
-        uses: sfdx-actions/setup-sfdx@v1
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          version: latest
+          node-version: '20'
 
-      - name: Print environment variables
-        run: printenv
+      - name: Checkout the PR branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Ensure full history is fetched
 
+      - name: Install Salesforce CLI and required tools
+        run: |
+          npm install -g @salesforce/cli
+          pip install xq yq
+          
+      - name: Install sfdxGitDelta
+        run: |
+          echo y | sf plugins install sfdx-git-delta
+
+      - name: Generate Delta between QA and PR Branch
+        run: |
+          # Generate the delta changes between the base branch and the head of the PR
+          sf sgd:source:delta --to "HEAD" --from "origin/QA" --output "." --ignore .github/workflows/ignore.txt
+          cat package/package.xml  # Output the generated package.xml for debugging
+          
       - name: Authenticate to Salesforce
         run: |
           echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
-          sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt
+          sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt 
 
-      - name: 'Read PR Body'
-        env:
-          PR_BODY: ${{ github.event.head_commit.message }}
+      - name: Deploy Delta Components with Specified Tests
+        if: ${{ env.APEX_TESTS != 'all' }}
         run: |
-              echo "Value of pr body : $PR_BODY "
-              echo $PR_BODY > .github/workflows/pr_body.txt
-              echo "cat .github/workflows/pr_body.txt"
-              node .github/workflows/parsePR.js
-              TESTS=$(cat .github/workflows/testsToRun.txt)
-              echo "APEX_TESTS=$TESTS" >> $GITHUB_ENV
-              echo "APEX_TESTS=$TESTS"
+          sf project deploy validate --manifest package/package.xml --test-level RunSpecifiedTests --tests ${{ env.APEX_TESTS }} --target-org qa 
 
-      - name: Install sfdxGit delta
+      - name: Deploy Delta Components with Local Tests
+        if: ${{ env.APEX_TESTS == 'all' }}
         run: |
-            echo y | sf plugins install sfdx-git-delta
-
-      - name: Ensure Previous Commit Exists
-        run: |
-            git fetch --deepen=1 # Fetch at least one more commit if HEAD~1 does not exist
-            if ! git rev-parse HEAD~1; then
-              echo "No previous commit (HEAD~1) found. Ensure the fetch depth is set correctly."
-              exit 1
-            fi
-      - name: Generate Delta Package
-        run: |
-            sf sgd:source:delta --to "HEAD" --from "HEAD~1"  --output "." --ignore .github/workflows/ignore.txt
-            cat package/package.xml 
-
-      - name: Validate Metadata
-        run: |
-          if [ "${{ env.RUN_TESTS }}" == "true" ]; then
-            sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org jp@sunsolutions.com --testlevel RunSpecifiedTests --runtests "${{ env.TEST_CLASSES }}"
-          else
-            sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org jp@sunsolutions.com --testlevel NoTestRun
-          fi
+          sf project deploy validate --manifest package/package.xml --test-level RunLocalTests --target-org qa 
