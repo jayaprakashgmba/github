@@ -38,14 +38,16 @@ jobs:
       - name: Authenticate to Salesforce
         run: |
           echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
-          sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt 
+          sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.tx
 
       - name: Deploy Delta Components with Specified Tests
-        if: ${{ env.APEX_TESTS != 'all' }}
+        if: ${{ env.APEX_TESTS && env.APEX_TESTS != '' }}
         run: |
-          sf project deploy validate --manifest package/package.xml --test-level RunSpecifiedTests --tests ${{ env.APEX_TESTS }} --target-org qa 
+          echo "Running specified tests: ${{ env.APEX_TESTS }}"
+          sf project deploy validate --manifest package/package.xml --test-level RunSpecifiedTests --tests ${{ env.APEX_TESTS }} --target-org qa
 
       - name: Deploy Delta Components with Local Tests
-        if: ${{ env.APEX_TESTS == 'all' }}
+        if: ${{ !env.APEX_TESTS || env.APEX_TESTS == '' }}
         run: |
-          sf project deploy validate --manifest package/package.xml --test-level RunLocalTests --target-org qa 
+          echo "No specific tests found, running all local tests."
+          sf project deploy validate --manifest package/package.xml --test-level RunLocalTests --target-org qa
