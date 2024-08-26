@@ -38,7 +38,7 @@ jobs:
       - name: Authenticate to Salesforce
         run: |
           echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
-          sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.tx
+          sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt
 
       - name: Deploy Delta Components with Specified Tests
         if: ${{ env.APEX_TESTS && env.APEX_TESTS != '' }}
