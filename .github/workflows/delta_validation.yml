@@ -16,11 +16,10 @@
           uses: actions/setup-python@v2
           with:
             python-version: 3.x
-        - name: Install dependencies
-          run: |
-            npm install -g @salesforce/cli
-            python -m pip install --upgrade pip
-            pip install -r requirements.txt
+        - name: Install dependencies\
+          uses: sfdx-actions/setup-sfdx@v1
+          with:
+            version: latest
         - name: Authenticate to Salesforce
           run: |
             echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
