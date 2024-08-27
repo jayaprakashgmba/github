@@ -1,53 +1,38 @@
-name: QA Br to Fullcopy Deploy
-
-on: 
-  pull_request:
-    branches:
-      - QA
-
-jobs:
-  SFDX-CLI-Deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Checkout the PR branch
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Ensure full history is fetched
-
-      - name: Install Salesforce CLI and required tools
-        run: |
-          npm install -g @salesforce/cli
-          pip install xq yq
-          
-      - name: Install sfdxGitDelta
-        run: |
-          echo y | sf plugins install sfdx-git-delta
-
-      - name: Generate Delta between QA and PR Branch
-        run: |
-          # Generate the delta changes between the base branch and the head of the PR
-          sf sgd:source:delta --to "HEAD" --from "origin/QA" --output "." --ignore .github/workflows/ignore.txt
-          cat package/package.xml  # Output the generated package.xml for debugging
-          
-      - name: Authenticate to Salesforce
-        run: |
-          echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
-          sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt
-
-      - name: Deploy Delta Components with Specified Tests
-        if: ${{ env.APEX_TESTS && env.APEX_TESTS != '' }}
-        run: |
-          echo "Running specified tests: ${{ env.APEX_TESTS }}"
-          sf project deploy validate --manifest package/package.xml --test-level RunSpecifiedTests --tests ${{ env.APEX_TESTS }} --target-org jp@sunsolutions.com
-
-      - name: Deploy Delta Components with Local Tests
-        if: ${{ !env.APEX_TESTS || env.APEX_TESTS == '' }}
-        run: |
-          echo "No specific tests found, running all local tests."
-          sf project deploy validate --manifest package/package.xml --test-level RunLocalTests --target-org jp@sunsolutions.com
+---
+  name: Validate Delta Changes with Base Branch
+  on:
+    pull_request:
+      branches:
+        - QA
+  jobs:
+    validate-delta-changes:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v2
+          with:
+            fetch-depth: 0
+        - name: Set up Python
+          uses: actions/setup-python@v2
+          with:
+            python-version: 3.x
+        - name: Install dependencies
+          run: |
+            npm install -g @salesforce/cli
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt
+        - name: Authenticate to Salesforce
+          run: |
+            echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
+            cat sfdx-auth-url.txt # Print file content for debugging
+            sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt
+        - name: Compare changes with base branch
+          run: >
+            git fetch origin ${{ github.base_ref }}  # Fetch the base branch
+  
+            git diff --name-only origin/${{ github.base_ref }} ${{ github.head_ref }} | grep '\.py$' | xargs pylint
+        - name: Run tests on changed files
+          run: >
+            git fetch origin ${{ github.base_ref }}  # Fetch the base branch
+  
+            git diff --name-only origin/${{ github.base_ref }} ${{ github.head_ref }} | grep '\.py$' | xargs pytest  
