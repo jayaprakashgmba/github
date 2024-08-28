@@ -73,10 +73,10 @@ jobs:
             exit 1
           fi
           echo "Running specified tests: ${{ env.TEST_CLASSES }}"
-          sf project deploy validate --manifest package/package.xml --test-level RunSpecifiedTests --tests ${{ env.TEST_CLASSES }} --target-org jp@sunsolutions.com --checkonly
+          sf project deploy validate --manifest package/package.xml --test-level RunSpecifiedTests --tests ${{ env.TEST_CLASSES }} --target-org jp@sunsolutions.com
 
       - name: Validate Delta Components with Local Tests
         if: ${{ env.RUN_TESTS == 'false' }}
         run: |
           echo "No specific tests found, running all local tests."
-          sf project deploy validate --manifest package/package.xml --test-level RunLocalTests --target-org jp@sunsolutions.com --checkonly
+          sf project deploy validate --manifest package/package.xml --test-level RunLocalTests --target-org jp@sunsolutions.com
