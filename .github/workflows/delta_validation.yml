@@ -48,11 +48,9 @@
               echo "RUN_TESTS=true" >> $GITHUB_ENV
             fi
 
-        - name: Install sfdxGit delta
-          run: >
-            echo y | sfdx plugins:install sfdx-git-delta
-            sfdx sgd:source:delta --to "HEAD" --from "HEAD~1" --output "." --ignore .github/workflows/ignore.txt
-            cat package/package.xml
+        - name: Install sfdxGitDelta
+          run: |
+            echo y | sf plugins install sfdx-git-delta
         
         - name: Generate Delta between QA and PR Branch
           run: |
