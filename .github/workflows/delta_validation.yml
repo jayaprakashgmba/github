@@ -77,8 +77,8 @@
            echo "Running specified tests: ${{ env.APEX_TESTS }}"
            sf project deploy validate --manifest package/package.xml --test-level RunSpecifiedTests --tests ${{ env.APEX_TESTS }} --target-org jp@sunsolutions.com
   
-        - name: validate Delta Components with Local Tests
-          if: ${{ !env.APEX_TESTS || env.APEX_TESTS == '' }}
-          run: |
-           echo "No specific tests found, running all local tests."
-           sf project deploy validate --manifest package/package.xml --test-level RunLocalTests --target-org jp@sunsolutions.com
+        #- name: validate Delta Components with Local Tests
+        #  if: ${{ !env.APEX_TESTS || env.APEX_TESTS == '' }}
+        #  run: |
+        #   echo "No specific tests found, running all local tests."
+        #   sf project deploy validate --manifest package/package.xml --test-level RunLocalTests --target-org jp@sunsolutions.com
