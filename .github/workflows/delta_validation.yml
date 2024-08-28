@@ -53,15 +53,16 @@
           run: |
             echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
             sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt
-        - name: validate Delta components to Salesforce RunSpecifiedTests
-          if: ${{ env.APEX_TESTS != 'all' }}
+        
+        - name: Run Specific Apex Tests
+          if: env.RUN_TESTS == 'true'
           run: >
-            sf project deploy validate --manifest package/package.xml --test-level
-            RunSpecifiedTests --tests ${{ env.APEX_TESTS }} --target-org
-            jp@sunsolutions.com
-        - name: validate Delta components to Salesforce RunLocalTests
-          if: ${{ env.APEX_TESTS == 'all' }}
+            sfdx force:apex:test:run -n ${{ env.TEST_CLASSES }} -r human -u jp@sunsolutions.com
+        
+        - name: Validate Metadata
           run: >
-            sf project deploy validate --manifest package/package.xml --test-level
-            RunLocalTests --target-org jp@sunsolutions.com
-  
+            if [ "${{ env.RUN_TESTS }}" == "true" ]; then
+              sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org jp@sunsolutions.com --testlevel RunSpecifiedTests --runtests "${{ env.TEST_CLASSES }}"
+              else
+              sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org jp@sunsolutions.com --testlevel NoTestRun
+            fi
