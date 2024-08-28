@@ -1,84 +1,76 @@
----
-  name: validate delta changes in PR
-  on:
-    pull_request:
-      branches:
-        - QA
-  jobs:
-    SFDX-CLI-Deploy:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/setup-node@v4
-          with:
-            node-version: "20"
-        - run: echo "🐧 GitHub Action running on ${{ runner.os }}"
-        - run: echo "🔎 Retrieving QA Branch from ${{ github.repository }}."
-        - uses: actions/checkout@v4
-          with:
-            ref: QA
-        
-        - uses: actions/checkout@v4
-          with:
-            fetch-depth: 0
+name: validate delta changes in PR
+on:
+  pull_request:
+    branches:
+      - QA
+jobs:
+  SFDX-CLI-Deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
 
-        - name: Install Salesforce CLI
-          run: |
-            npm install -g @salesforce/cli
-            sf --help
-            pip install xq
-            pip install yq
+      - run: echo "🐧 GitHub Action running on ${{ runner.os }}"
 
-        - name: Authenticate to Salesforce
-          run: |
-            echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
-            sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt
+      - run: echo "🔎 Retrieving QA Branch from ${{ github.repository }}."
 
-        - name: Debug Test Classes File
-          run: cat test-classes.txt
+      - uses: actions/checkout@v4
+        with:
+          ref: QA
 
-        - name: Read Test Class Names from File
-          id: read-test-classes
-          run: |
-            TEST_CLASSES=$(cat test-classes.txt | tr '\n' ',' | sed 's/,$//')
-            if [ -z "$TEST_CLASSES" ]; then
-              echo "TEST_CLASSES=" >> $GITHUB_ENV
-              echo "RUN_TESTS=false" >> $GITHUB_ENV
-            else
-              echo "TEST_CLASSES=$TEST_CLASSES" >> $GITHUB_ENV
-              echo "RUN_TESTS=true" >> $GITHUB_ENV
-            fi
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-        - name: Install sfdxGitDelta
-          run: |
-            echo y | sf plugins install sfdx-git-delta
-        
-        - name: Generate Delta between QA and PR Branch
-          run: |
-            # Generate the delta changes between the base branch and the head of the PR
-            sf sgd source delta --to "HEAD" --from "origin/QA" --output "." --ignore .github/workflows/ignore.txt
-            cat package/package.xml  # Output the generated package.xml for debugging
-    
-        - name: Run Specific Apex Tests
-          if: env.RUN_TESTS == 'true'
-          run: >
-            sfdx force:apex:test:run -n ${{ env.TEST_CLASSES }} -r human -u jp@sunsolutions.com
-        
-        #- name: Validate Metadata
-        #  run: >
-        #    if [ "${{ env.RUN_TESTS }}" == "true" ]; then
-        #      sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org jp@sunsolutions.com --testlevel RunSpecifiedTests --runtests "${{ env.TEST_CLASSES }}"
-        #      else
-        #      sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org jp@sunsolutions.com --testlevel NoTestRun
-        #    fi
+      - name: Install Salesforce CLI
+        run: |
+          npm install -g @salesforce/cli
+          sf --help
+          pip install xq
+          pip install yq
 
-        - name: validate Delta Components with Specified Tests
-          if: ${{ env.TEST_CLASSES && env.TEST_CLASSES != '' }}
-          run: |
-           echo "Running specified tests: ${{ env.APEX_TESTS }}"
-           sf project deploy validate --manifest package/package.xml --test-level RunSpecifiedTests --tests ${{ env.APEX_TESTS }} --target-org jp@sunsolutions.com
-  
-        #- name: validate Delta Components with Local Tests
-        #  if: ${{ !env.TEST_CLASSES || env.TEST_CLASSES == '' }}
-        #  run: |
-        #   echo "No specific tests found, running all local tests."
-        #   sf project deploy validate --manifest package/package.xml --test-level RunLocalTests --target-org jp@sunsolutions.com
+      - name: Authenticate to Salesforce
+        run: |
+          echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
+          sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt
+
+      - name: Debug Test Classes File
+        run: cat test-classes.txt
+
+      - name: Read Test Class Names from File
+        id: read-test-classes
+        run: |
+          TEST_CLASSES=$(cat test-classes.txt | tr '\n' ',' | sed 's/,$//')
+          if [ -z "$TEST_CLASSES" ]; then
+            echo "TEST_CLASSES=" >> $GITHUB_ENV
+            echo "RUN_TESTS=false" >> $GITHUB_ENV
+          else
+            echo "TEST_CLASSES=$TEST_CLASSES" >> $GITHUB_ENV
+            echo "RUN_TESTS=true" >> $GITHUB_ENV
+          fi
+
+      - name: Install sfdxGitDelta
+        run: |
+          echo y | sf plugins install sfdx-git-delta
+
+      - name: Generate Delta between QA and PR Branch
+        run: |
+          # Generate the delta changes between the base branch and the head of the PR
+          sf sgd source delta --to "HEAD" --from "origin/QA" --output "." --ignore .github/workflows/ignore.txt
+          cat package/package.xml  # Output the generated package.xml for debugging
+
+      - name: Debug Environment Variables
+        run: |
+          echo "TEST_CLASSES=${{ env.TEST_CLASSES }}"
+          echo "RUN_TESTS=${{ env.RUN_TESTS }}"
+
+      - name: Validate Delta Components with Specified Tests
+        if: ${{ env.RUN_TESTS == 'true' }}
+        run: |
+          if [ -z "${{ env.TEST_CLASSES }}" ]; then
+            echo "No test classes specified. Exiting."
+            exit 1
+          fi
+          echo "Running specified tests: ${{ env.TEST_CLASSES }}"
+          sf project deploy validate --manifest package/package.xml --test-level RunSpecifiedTests --tests ${{ env.TEST_CLASSES }} --target-org jp@sunsolutions.com
