@@ -73,4 +73,4 @@ jobs:
             exit 1
           fi
           echo "Running specified tests: ${{ env.TEST_CLASSES }}"
-          sf project deploy validate --manifest package/package.xml --test-level RunSpecifiedTests --tests ${{ env.TEST_CLASSES }} --checkonly --target-org jp@sunsolutions.com
+          sf project deploy validate --manifest package/package.xml --test-level RunSpecifiedTests --tests ${{ env.TEST_CLASSES }}  --target-org jp@sunsolutions.com --checkonly
