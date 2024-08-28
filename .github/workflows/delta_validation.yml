@@ -13,11 +13,11 @@ jobs:
 
       - run: echo "🐧 GitHub Action running on ${{ runner.os }}"
 
-      - run: echo "🔎 Retrieving QA Branch from ${{ github.repository }}."
+      - run: echo "🔎 Retrieving Dev Branch from ${{ github.repository }}."
 
       - uses: actions/checkout@v4
         with:
-          ref: QA
+          ref: Dev
 
       - uses: actions/checkout@v4
         with:
@@ -73,4 +73,10 @@ jobs:
             exit 1
           fi
           echo "Running specified tests: ${{ env.TEST_CLASSES }}"
-          sf project deploy validate --manifest package/package.xml --test-level RunSpecifiedTests --tests ${{ env.TEST_CLASSES }}  --target-org jp@sunsolutions.com --checkonly
+          sf project deploy validate --manifest package/package.xml --test-level RunSpecifiedTests --tests ${{ env.TEST_CLASSES }} --target-org jp@sunsolutions.com --checkonly
+
+      - name: Validate Delta Components with Local Tests
+        if: ${{ env.RUN_TESTS == 'false' }}
+        run: |
+          echo "No specific tests found, running all local tests."
+          sf project deploy validate --manifest package/package.xml --test-level RunLocalTests --target-org jp@sunsolutions.com --checkonly
