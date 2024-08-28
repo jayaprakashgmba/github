@@ -16,26 +16,32 @@
         - uses: actions/checkout@v4
           with:
             ref: QA
-        - name: Read PR Body
-          env:
-            PR_BODY: ${{ github.event.head_commit.message }}
-          run: |
-            echo "Value of pr body : $PR_BODY "
-            echo $PR_BODY > .github/workflows/pr_body.txt
-            echo "cat .github/workflows/pr_body.txt"
-            node .github/workflows/parsePR.js
-            TESTS=$(cat .github/workflows/testsToRun.txt)
-            echo "APEX_TESTS=$TESTS" >> $GITHUB_ENV
-            echo "APEX_TESTS=$TESTS"
+        
         - uses: actions/checkout@v4
           with:
             fetch-depth: 0
+
         - name: Install Salesforce CLI
           run: |
             npm install @salesforce/cli --global
             sf --help
             pip install xq
             pip install yq
+        - name: Debug Test Classes File
+            run: cat test-classes.txt
+
+        - name: Read Test Class Names from File
+          id: read-test-classes
+          run: |
+            TEST_CLASSES=$(cat test-classes.txt | tr '\n' ',' | sed 's/,$//')
+            if [ -z "$TEST_CLASSES" ]; then
+              echo "TEST_CLASSES=" >> $GITHUB_ENV
+              echo "RUN_TESTS=false" >> $GITHUB_ENV
+            else
+              echo "TEST_CLASSES=$TEST_CLASSES" >> $GITHUB_ENV
+              echo "RUN_TESTS=true" >> $GITHUB_ENV
+            fi
+        
         - name: Install sfdxGit delta
           run: >
             echo y | sf plugins install sfdx-git-delta
