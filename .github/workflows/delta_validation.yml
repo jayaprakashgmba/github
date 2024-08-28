@@ -1,7 +1,7 @@
 ---
   name: validate delta changes in PR
   on:
-    push:
+    pull_request:
       branches:
         - QA
   jobs:
