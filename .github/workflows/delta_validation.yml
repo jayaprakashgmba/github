@@ -49,6 +49,12 @@
             sf sgd:source:delta --to "HEAD" --from "HEAD~1"  --output "." --ignore .github/workflows/ignore.txt
   
             cat package/package.xml
+        - name: Generate Delta between QA and PR Branch
+          run: |
+            # Generate the delta changes between the base branch and the head of the PR
+            sf sgd:source:delta --to "HEAD" --from "origin/QA" --output "." --ignore .github/workflows/ignore.txt
+            cat package/package.xml  # Output the generated package.xml for debugging
+    
         - name: Authenticate to Salesforce
           run: |
             echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
