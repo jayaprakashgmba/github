@@ -28,7 +28,7 @@
             pip install xq
             pip install yq
         - name: Debug Test Classes File
-            run: cat test-classes.txt
+          run: cat test-classes.txt
 
         - name: Read Test Class Names from File
           id: read-test-classes
