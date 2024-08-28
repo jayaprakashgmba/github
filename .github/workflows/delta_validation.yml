@@ -27,6 +27,12 @@
             sf --help
             pip install xq
             pip install yq
+
+        - name: Authenticate to Salesforce
+          run: |
+            echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
+            sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt
+            
         - name: Debug Test Classes File
           run: cat test-classes.txt
 
@@ -42,24 +48,12 @@
               echo "RUN_TESTS=true" >> $GITHUB_ENV
             fi
         
-        - name: Install sfdxGit delta
-          run: >
-            echo y | sf plugins install sfdx-git-delta
-  
-            sf sgd:source:delta --to "HEAD" --from "HEAD~1"  --output "." --ignore .github/workflows/ignore.txt
-  
-            cat package/package.xml
         - name: Generate Delta between QA and PR Branch
           run: |
             # Generate the delta changes between the base branch and the head of the PR
             sf sgd:source:delta --to "HEAD" --from "origin/QA" --output "." --ignore .github/workflows/ignore.txt
             cat package/package.xml  # Output the generated package.xml for debugging
     
-        - name: Authenticate to Salesforce
-          run: |
-            echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
-            sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt
-        
         - name: Run Specific Apex Tests
           if: env.RUN_TESTS == 'true'
           run: >
