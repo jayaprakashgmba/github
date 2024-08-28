@@ -1,63 +1,61 @@
-name: PR Validation for Salesforce Metadata
-
-on:
-  pull_request:
-    branches:
-      - jp5
-
-jobs:
-  validate:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Salesforce CLI
-        uses: sfdx-actions/setup-sfdx@v1
-        with:
-          version: latest
-
-      - name: Print environment variables
-        run: printenv
-
-      - name: Authenticate to Salesforce
-        run: |
-          echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
-          sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt
-
-      - name: 'Read PR Body'
-        env:
-          PR_BODY: ${{ github.event.head_commit.message }}
-        run: |
-              echo "Value of pr body : $PR_BODY "
-              echo $PR_BODY > .github/workflows/pr_body.txt
-              echo "cat .github/workflows/pr_body.txt"
-              node .github/workflows/parsePR.js
-              TESTS=$(cat .github/workflows/testsToRun.txt)
-              echo "APEX_TESTS=$TESTS" >> $GITHUB_ENV
-              echo "APEX_TESTS=$TESTS"
-
-      - name: Install sfdxGit delta
-        run: |
+---
+  name: validate delta changes in PR
+  on:
+    push:
+      branches:
+        - QA
+  jobs:
+    SFDX-CLI-Deploy:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/setup-node@v4
+          with:
+            node-version: "20"
+        - run: echo "🐧 GitHub Action running on ${{ runner.os }}"
+        - run: echo "🔎 Retrieving QA Branch from ${{ github.repository }}."
+        - uses: actions/checkout@v4
+          with:
+            ref: Dev
+        - name: Read PR Body
+          env:
+            PR_BODY: ${{ github.event.head_commit.message }}
+          run: |
+            echo "Value of pr body : $PR_BODY "
+            echo $PR_BODY > .github/workflows/pr_body.txt
+            echo "cat .github/workflows/pr_body.txt"
+            node .github/workflows/parsePR.js
+            TESTS=$(cat .github/workflows/testsToRun.txt)
+            echo "APEX_TESTS=$TESTS" >> $GITHUB_ENV
+            echo "APEX_TESTS=$TESTS"
+        - uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+        - name: Install Salesforce CLI
+          run: |
+            npm install @salesforce/cli --global
+            sf --help
+            pip install xq
+            pip install yq
+        - name: Install sfdxGit delta
+          run: >
             echo y | sf plugins install sfdx-git-delta
-
-      - name: Ensure Previous Commit Exists
-        run: |
-            git fetch --deepen=1 # Fetch at least one more commit if HEAD~1 does not exist
-            if ! git rev-parse HEAD~1; then
-              echo "No previous commit (HEAD~1) found. Ensure the fetch depth is set correctly."
-              exit 1
-            fi
-      - name: Generate Delta Package
-        run: |
+  
             sf sgd:source:delta --to "HEAD" --from "HEAD~1"  --output "." --ignore .github/workflows/ignore.txt
-            cat package/package.xml 
-
-      - name: Validate Metadata
-        run: |
-          if [ "${{ env.RUN_TESTS }}" == "true" ]; then
-            sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org jp@sunsolutions.com --testlevel RunSpecifiedTests --runtests "${{ env.TEST_CLASSES }}"
-          else
-            sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org jp@sunsolutions.com --testlevel NoTestRun
-          fi
+  
+            cat package/package.xml
+        - name: Authenticate to Salesforce
+          run: |
+            echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
+            sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt
+        - name: validate Delta components to Salesforce RunSpecifiedTests
+          if: ${{ env.APEX_TESTS != 'all' }}
+          run: >
+            sf project deploy validate --manifest package/package.xml --test-level
+            RunSpecifiedTests --tests ${{ env.APEX_TESTS }} --target-org
+            jp@sunsolutions.com
+        - name: validate Delta components to Salesforce RunLocalTests
+          if: ${{ env.APEX_TESTS == 'all' }}
+          run: >
+            sf project deploy validate --manifest package/package.xml --test-level
+            RunLocalTests --target-org jp@sunsolutions.com
+  
