@@ -23,7 +23,7 @@
 
         - name: Install Salesforce CLI
           run: |
-            npm install @salesforce/cli --global
+            npm install -g @salesforce/cli
             sf --help
             pip install xq
             pip install yq
@@ -71,13 +71,13 @@
         #      sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org jp@sunsolutions.com --testlevel NoTestRun
         #    fi
 
-        - name: Deploy Delta Components with Specified Tests
+        - name: validate Delta Components with Specified Tests
           if: ${{ env.APEX_TESTS && env.APEX_TESTS != '' }}
           run: |
            echo "Running specified tests: ${{ env.APEX_TESTS }}"
            sf project deploy validate --manifest package/package.xml --test-level RunSpecifiedTests --tests ${{ env.APEX_TESTS }} --target-org jp@sunsolutions.com
   
-        - name: Deploy Delta Components with Local Tests
+        - name: validate Delta Components with Local Tests
           if: ${{ !env.APEX_TESTS || env.APEX_TESTS == '' }}
           run: |
            echo "No specific tests found, running all local tests."
