@@ -28,13 +28,6 @@
             pip install xq
             pip install yq
 
-        - name: Install sfdxGit delta
-          run: >
-            echo y | sfdx plugins:install sfdx-git-delta
-            sfdx sgd:source:delta --to "HEAD" --from "HEAD~1" --output "." --ignore .github/workflows/ignore.txt
-            cat package/package.xml
-          
-
         - name: Authenticate to Salesforce
           run: |
             echo ${{ secrets.SF_AUTH_URL }} > sfdx-auth-url.txt
@@ -54,6 +47,12 @@
               echo "TEST_CLASSES=$TEST_CLASSES" >> $GITHUB_ENV
               echo "RUN_TESTS=true" >> $GITHUB_ENV
             fi
+
+        - name: Install sfdxGit delta
+          run: >
+            echo y | sfdx plugins:install sfdx-git-delta
+            sfdx sgd:source:delta --to "HEAD" --from "HEAD~1" --output "." --ignore .github/workflows/ignore.txt
+            cat package/package.xml
         
         - name: Generate Delta between QA and PR Branch
           run: |
