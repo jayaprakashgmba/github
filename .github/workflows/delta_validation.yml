@@ -1,8 +1,10 @@
 name: validate delta changes in PR
+
 on:
   pull_request:
     branches:
       - QA
+
 jobs:
   SFDX-CLI-Deploy:
     runs-on: ubuntu-latest
@@ -82,3 +84,25 @@ jobs:
         run: |
           echo "No specific tests found, running all local tests."
           sf project deploy validate --manifest package/package.xml --test-level RunLocalTests --target-org jp@sunsolutions.com
+
+      - name: Set Validation Success Status
+        id: set-status
+        run: |
+          echo "Setting validation success status..."
+          echo "VALIDATION_SUCCESS=true" >> $GITHUB_ENV
+
+      - name: Handle Validation Failure
+        if: failure()
+        run: |
+          echo "Validation failed. Disabling Quick Deploy button."
+          # Here, you would integrate with your tool's API or system to disable the Quick Deploy button.
+          # This is a placeholder for the API call or script needed.
+          echo "VALIDATION_SUCCESS=false" >> $GITHUB_ENV
+
+      - name: Finalize Workflow
+        run: |
+          if [ "${{ env.VALIDATION_SUCCESS }}" == "true" ]; then
+            echo "Validation passed. Proceeding with the workflow."
+          else:
+            echo "Validation did not pass. Stopping the workflow."
+            exit 1
