@@ -91,15 +91,19 @@ jobs:
           echo "Setting validation success status..."
           echo "VALIDATION_SUCCESS=true" >> $GITHUB_ENV
 
+      - name: Disable Quick Deploy Button
+        run: |
+          echo "Disabling Quick Deploy button."
+          # Placeholder for the API call or script to disable the Quick Deploy button.
+          # This step will execute regardless of the validation success or failure.
+          
       - name: Handle Validation Failure
         if: failure()
         run: |
-          echo "Validation failed. Disabling Quick Deploy button."
-          # Here, you would integrate with your tool's API or system to disable the Quick Deploy button.
-          # This is a placeholder for the API call or script needed.
-          echo "VALIDATION_SUCCESS=false" >> $GITHUB_ENV
+          echo "Validation failed. Exiting workflow."
+          exit 1
 
-      - name: Finalize Workflow
+      - name: Finalize Workflow   
         run: |
           if [ "${{ env.VALIDATION_SUCCESS }}" == "true" ]; then
             echo "Validation passed. Proceeding with the workflow."
