@@ -78,10 +78,10 @@ jobs:
         if: ${{ env.RUN_TESTS == 'false' }}
         run: |
           echo "Validating delta components without running tests."
-          sf project deploy validate --manifest package/package.xml --target-org QA
+          sf project deploy validate --manifest package/package.xml --target-org jp@sunsolutions.com
 
       - name: Validate Delta Components with Specified Tests
         if: ${{ env.RUN_TESTS == 'true' }}
         run: |
           echo "Running specified tests: ${{ env.TEST_CLASSES }}"
-          sf project deploy validate --manifest package/package.xml --test-level RunSpecifiedTests --tests ${{ env.TEST_CLASSES }} --target-org QA
+          sf project deploy validate --manifest package/package.xml --test-level RunSpecifiedTests --tests ${{ env.TEST_CLASSES }} --target-org jp@sunsolutions.com
