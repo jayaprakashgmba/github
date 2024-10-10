@@ -64,7 +64,9 @@ jobs:
       
       - name: Generate Delta between QA and PR Branch
         run: >
-          sf sgd source delta --to "HEAD" --from "origin/QA" --output "." --ignore .github/workflows/ignore.txt
+          # Generate the delta changes between the base branch and the head of the PR
+          #sf sgd source delta --to "HEAD" --from "origin/QA" --output "." --ignore .github/workflows/ignore.txt
+          
           cat package/package.xml  # Output the generated package.xml for debugging
           
       - name: Debug Environment Variables
