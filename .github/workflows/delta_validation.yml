@@ -36,14 +36,8 @@ jobs:
       - name: Check if Test Classes File Exists
         run: |
           if [ ! -s test-classes.txt ]; then
-            echo "test-classes.txt is missing or empty."
-            echo "No test classes will be run, but delta validation will continue."
-            echo "TEST_CLASSES=" >> $GITHUB_ENV
-            echo "RUN_TESTS=false" >> $GITHUB_ENV
-          else
-            echo "test-classes.txt exists."
-            echo "TEST_CLASSES=$(cat test-classes.txt)" >> $GITHUB_ENV
-            echo "RUN_TESTS=true" >> $GITHUB_ENV
+            echo "test-classes.txt is missing or empty. Exiting."
+            exit 1
           fi
       
       - name: Read Test Class Names from File
@@ -64,24 +58,24 @@ jobs:
       
       - name: Generate Delta between QA and PR Branch
         run: |
-          # Generate the delta changes between the base branch and the head of the PR
           sf sgd source delta --to "HEAD" --from "origin/QA" --output "." --ignore .github/workflows/ignore.txt
-          
           cat package/package.xml  # Output the generated package.xml for debugging
           
       - name: Debug Environment Variables
         run: |
           echo "TEST_CLASSES=${{ env.TEST_CLASSES }}"
           echo "RUN_TESTS=${{ env.RUN_TESTS }}"
-          
-      - name: Validate Delta Components without Tests
-        if: ${{ env.RUN_TESTS == 'false' }}
-        run: |
-          echo "Validating delta components without running tests."
-          sf project deploy validate --manifest package/package.xml --target-org jp@sunsolutions.com
-
+      
+      # Validate with specified tests if RUN_TESTS is true
       - name: Validate Delta Components with Specified Tests
         if: ${{ env.RUN_TESTS == 'true' }}
-        run: |
+        run: >
           echo "Running specified tests: ${{ env.TEST_CLASSES }}"
           sf project deploy validate --manifest package/package.xml --test-level RunSpecifiedTests --tests ${{ env.TEST_CLASSES }} --target-org jp@sunsolutions.com
+      
+      # Validate package without tests if RUN_TESTS is false
+      - name: Validate Delta Components without Tests
+        if: ${{ env.RUN_TESTS == 'false' }}
+        run: >
+          echo "No test classes found. Validating package without running tests."
+          sf project deploy validate --manifest package/package.xml --test-level NoTestRun --target-org jp@sunsolutions.com
