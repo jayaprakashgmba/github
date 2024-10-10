@@ -36,7 +36,7 @@ jobs:
       - name: Check if Test Classes File Exists
         run: |
           if [ ! -s test-classes.txt ]; then
-            echo "test-classes.txt is missing or empty. Exiting."
+            echo "test-classes.txt is missing . Exiting."
             exit 1
           fi
       
