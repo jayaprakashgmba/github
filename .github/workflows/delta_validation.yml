@@ -11,26 +11,32 @@
         - uses: actions/setup-node@v4
           with:
             node-version: "20"
+
         - run: echo "🐧 GitHub Action running on ${{ runner.os }}"
         - run: echo "🔎 Retrieving QA Branch from ${{ github.repository }}."
         - uses: actions/checkout@v4
           with:
             ref: QA
+
         - uses: actions/checkout@v4
           with:
             fetch-depth: 0
+
         - name: Install Salesforce CLI
           run: |
             npm install -g @salesforce/cli
             sf --help
             pip install xq
             pip install yq
+
         - name: Authenticate to Salesforce
           run: |
             echo "${{ secrets.SF_AUTH_URL }}" > sfdx-auth-url.txt
             sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt 
+
         - name: Debug Test Classes File
           run: cat test-classes.txt
+
         - name: Read Test Class Names from File
           id: read-test-classes
           run: |
@@ -52,10 +58,12 @@
             sf sgd source delta --to "HEAD" --from "origin/QA" --output "." --ignore .github/workflows/ignore.txt
   
             cat package/package.xml  # Output the generated package.xml for debugging
+
         - name: Debug Environment Variables
           run: |
             echo "TEST_CLASSES=${{ env.TEST_CLASSES }}"
             echo "RUN_TESTS=${{ env.RUN_TESTS }}"
+            
         - name: Validate Delta Components with Specified Tests
           if: ${{ env.RUN_TESTS == 'true' }}
           run: >
