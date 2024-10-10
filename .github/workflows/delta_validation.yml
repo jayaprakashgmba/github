@@ -63,7 +63,7 @@ jobs:
           echo y | sf plugins install sfdx-git-delta
       
       - name: Generate Delta between QA and PR Branch
-        run: >
+        run: |
           # Generate the delta changes between the base branch and the head of the PR
           sf sgd source delta --to "HEAD" --from "origin/QA" --output "." --ignore .github/workflows/ignore.txt
           
