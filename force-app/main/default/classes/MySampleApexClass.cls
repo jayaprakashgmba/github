@@ -7,5 +7,7 @@ public class MySampleApexClass {       //Class definition and body
    // do some calculation
       myValue = myValue+10;
       return myValue;
+
+      //// no need to add any thing
    }
 }
