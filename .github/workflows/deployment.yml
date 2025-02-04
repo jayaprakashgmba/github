@@ -15,7 +15,7 @@ jobs:
       - run: echo "🔎 Retrieving Dev Branch from ${{ github.repository }}."
       - uses: actions/checkout@v4
         with: 
-          ref: 'Dev'
+          ref: 'QA'
       - name: 'Read PR Body'
         env:
           PR_BODY: ${{ github.event.head_commit.message }}
