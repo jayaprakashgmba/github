@@ -1,91 +1,87 @@
-name: PR Validation for Changed Files and Apex Tests
-
+name: validate delta changes in PR
 on:
   pull_request:
     branches:
-      - QA  # Trigger for PRs targeting the Dev branch
-
-
+      - QA
 jobs:
-  validate:
+  SFDX-CLI-Deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-
-      - name: Set up Salesforce CLI
-        uses: sfdx-actions/setup-sfdx@v1
+      - uses: actions/setup-node@v4
         with:
-          version: latest
+          node-version: "20"
+      - run: echo "🐧 GitHub Action running on ${{ runner.os }}"
+      - run: echo "🔎 Retrieving Dev Branch from ${{ github.repository }}."
+      - uses: actions/checkout@v4
+        with:
+          ref: QA
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install Salesforce CLI
+        run: |
+          npm install -g @salesforce/cli
+          sf --help
+          pip install xq
+          pip install yq
 
       - name: Authenticate to Salesforce
         run: |
           echo "${{ secrets.SF_AUTH_URL }}" > sfdx-auth-url.txt
           sfdx auth:sfdxurl:store --sfdx-url-file sfdx-auth-url.txt
-
-      - name: Get List of Changed Files
-        id: get-changed-files
+     
+      - name: Debug Test Classes File
+        run: cat test-classes.txt
+      
+      - name: Check if Test Classes File Exists
         run: |
-          # Get a list of files changed between the base and head of the PR
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }})
-          echo "Changed files: $CHANGED_FILES"
-          echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
-
-      - name: Filter Changed Salesforce Files and Validate Metadata
-        run: |
-          # Loop through the changed files and validate only Salesforce metadata
-          for file in ${{ env.CHANGED_FILES }}; do
-            if [[ $file == force-app/main/default/* ]]; then
-              echo "Validating changed Salesforce file: $file"
-              sfdx force:source:deploy --checkonly --sourcepath $file --target-org jp@sunsolutions.com --testlevel NoTestRun
-            else
-              echo "Skipping file: $file (Not Salesforce metadata)"
-            fi
-          done
-        shell: bash
-
-      - name: Pick Test Classes from Changed Apex Files
-        id: pick-test-classes
-        run: |
-          # Initialize test classes variable
-          TEST_CLASSES=""
-          
-          # Loop through changed files and identify Apex classes
-          for file in ${{ env.CHANGED_FILES }}; do
-            if [[ $file == force-app/main/default/classes/* ]]; then
-              CLASS_NAME=$(basename $file .cls)  # Strip path and .cls extension to get the class name
-              echo "Detected changed Apex class: $CLASS_NAME"
-              
-              # Append to test class list if it has a corresponding test class
-              if [[ -f "force-app/main/default/classes/${CLASS_NAME}Test.cls" ]]; then
-                TEST_CLASSES="${TEST_CLASSES},${CLASS_NAME}Test"
-              fi
-            fi
-          done
-
-          # Remove the leading comma if there are test classes
-          TEST_CLASSES=$(echo $TEST_CLASSES | sed 's/^,//')
-
-          # Set the environment variable for the test classes
-          echo "TEST_CLASSES=$TEST_CLASSES" >> $GITHUB_ENV
-
-          # Determine if tests should be run
-          if [[ -z "$TEST_CLASSES" ]]; then
+          if [ ! -s test-classes.txt ]; then
+            echo "test-classes.txt is missing or empty."
+            echo "No test classes will be run, but delta validation will continue."
+            echo "TEST_CLASSES=" >> $GITHUB_ENV
             echo "RUN_TESTS=false" >> $GITHUB_ENV
           else
+            echo "test-classes.txt exists."
+            echo "TEST_CLASSES=$(cat test-classes.txt)" >> $GITHUB_ENV
             echo "RUN_TESTS=true" >> $GITHUB_ENV
           fi
-        shell: bash
-
-      - name: Run Specific Apex Tests
-        if: env.RUN_TESTS == 'true'
+      
+      - name: Read Test Class Names from File
+        id: read-test-classes
         run: |
-          echo "Running Apex tests for classes: ${{ env.TEST_CLASSES }}"
-          sfdx force:apex:test:run -n ${{ env.TEST_CLASSES }} -r human -u jp@sunsolutions.com
-
-      - name: Fallback - Run Full Metadata Validation If No Tests Are Found
-        if: env.RUN_TESTS == 'false'
+          TEST_CLASSES=$(cat test-classes.txt | tr '\n' ',' | sed 's/,$//')
+          if [ -z "$TEST_CLASSES" ]; then
+            echo "TEST_CLASSES=" >> $GITHUB_ENV
+            echo "RUN_TESTS=false" >> $GITHUB_ENV
+          else
+            echo "TEST_CLASSES=$TEST_CLASSES" >> $GITHUB_ENV
+            echo "RUN_TESTS=true" >> $GITHUB_ENV
+          fi
+          
+      - name: Install sfdxGitDelta
         run: |
-          echo "No specific tests to run, validating all metadata."
-          sfdx force:source:deploy --checkonly --sourcepath force-app/main/default --target-org jp@sunsolutions.com --testlevel NoTestRun
+          echo y | sf plugins install sfdx-git-delta
+      
+      - name: Generate Delta between QA and PR Branch
+        run: |
+          # Generate the delta changes between the base branch and the head of the PR
+          sf sgd source delta --to "HEAD" --from "origin/QA" --output "." --ignore .github/workflows/ignore.txt
+          
+          cat package/package.xml  # Output the generated package.xml for debugging
+          
+      - name: Debug Environment Variables
+        run: |
+          echo "TEST_CLASSES=${{ env.TEST_CLASSES }}"
+          echo "RUN_TESTS=${{ env.RUN_TESTS }}"
+          
+      - name: Validate Delta Components without Tests
+        if: ${{ env.RUN_TESTS == 'false' }}
+        run: |
+          echo "Validating delta components without running tests."
+          sf project deploy validate --manifest package/package.xml --target-org jp@sunsolutions.com
+
+      - name: Validate Delta Components with Specified Tests
+        if: ${{ env.RUN_TESTS == 'true' }}
+        run: |
+          echo "Running specified tests: ${{ env.TEST_CLASSES }}"
+          sf project deploy validate --manifest package/package.xml --test-level RunSpecifiedTests --tests ${{ env.TEST_CLASSES }} --target-org jp@sunsolutions.com
