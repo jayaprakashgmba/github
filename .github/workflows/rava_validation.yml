@@ -43,5 +43,5 @@ jobs:
 
       - name: Deploy Delta to UAT
         run: |
-          sfdx force:auth:jwt:grant --clientid ${{ secrets.SFDC_CLIENT_ID }} --jwtkeyfile assets/server.key --username ${{ secrets.SFDC_UAT_USERNAME }} --instanceurl https://test.salesforce.com -a UAT
-          sfdx force:source:deploy -u UAT -x delta/package/package.xml --testlevel RunLocalTests --wait 10
+          sfdx force:auth:jwt:grant --clientid ${{ secrets.SFDC_CLIENT_ID }} --jwtkeyfile assets/server.key --username ${{ secrets.SFDC_UAT_USERNAME }} --instanceurl https://orgfarm-ea4276b2f3-dev-ed.develop.my.salesforce.com -a UAT
+          sfdx force:source:deploy -u UAT -x delta/package/package.xml --testlevel RunLocalTests --wait 1
