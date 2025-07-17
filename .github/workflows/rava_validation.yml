@@ -42,7 +42,6 @@ jobs:
           npm install -g sfdx-cli
           sfdx plugins:install sfdx-git-delta
           sfdx plugins  # List installed plugins to verify
-
       - name: Install sfdx-git-delta via GitHub
         run: |
           npm install -g sfdx-cli
@@ -72,7 +71,7 @@ jobs:
 
 
 
-       10. Deploy Delta to main
+       #10. Deploy Delta to main
       - name: Deploy to UAT Org
         run: |
           echo "Authenticating to UAT using stored access token..."
