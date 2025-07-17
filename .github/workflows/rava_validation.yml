@@ -51,6 +51,13 @@ jobs:
           sfdx sgd:source:delta --to HEAD --from origin/main --output delta --generate-delta
 
       # 9. Create Folder Named After Branch and Copy Delta Code
+      - name: Install sfdx-git-delta Plugin
+        run: |
+          npm install -g sfdx-cli
+          sfdx plugins:install sfdx-git-delta
+          sfdx plugins  # List installed plugins to verify
+
+          
       - name: Generate Delta Package
         run: |
           git fetch origin main
@@ -58,6 +65,15 @@ jobs:
           sfdx sgd:source:delta --to HEAD --from origin/main --output delta --generate-delta
           echo "Delta package contents:"
           ls -R delta || echo "No delta folder created"
+
+      - name: Install sfdx-git-delta via GitHub
+        run: |
+          npm install -g sfdx-cli
+          git clone https://github.com/scolladon/sfdx-git-delta.git
+          cd sfdx-git-delta
+          npm install
+          sfdx plugins:link .
+
 
       # 10. Deploy Delta to UAT
       #- name: Deploy to UAT Org
