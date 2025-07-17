@@ -38,7 +38,18 @@ jobs:
 
       # 6. Install sfdx-git-delta Plugin
       - name: Install sfdx-git-delta Plugin
-        run: sfdx plugins:install sfdx-git-delta
+        run: |
+          npm install -g sfdx-cli
+          sfdx plugins:install sfdx-git-delta
+          sfdx plugins  # List installed plugins to verify
+
+      - name: Install sfdx-git-delta via GitHub
+        run: |
+          npm install -g sfdx-cli
+          git clone https://github.com/scolladon/sfdx-git-delta.git
+          cd sfdx-git-delta
+          npm install
+          sfdx plugins:link .
 
       # 7. Get Current Branch Name
       - name: Get Current Branch Name
@@ -51,13 +62,6 @@ jobs:
           sfdx sgd:source:delta --to HEAD --from origin/main --output delta --generate-delta
 
       # 9. Create Folder Named After Branch and Copy Delta Code
-      - name: Install sfdx-git-delta Plugin
-        run: |
-          npm install -g sfdx-cli
-          sfdx plugins:install sfdx-git-delta
-          sfdx plugins  # List installed plugins to verify
-
-          
       - name: Generate Delta Package
         run: |
           git fetch origin main
@@ -66,19 +70,12 @@ jobs:
           echo "Delta package contents:"
           ls -R delta || echo "No delta folder created"
 
-      - name: Install sfdx-git-delta via GitHub
+
+
+       10. Deploy Delta to main
+      - name: Deploy to UAT Org
         run: |
-          npm install -g sfdx-cli
-          git clone https://github.com/scolladon/sfdx-git-delta.git
-          cd sfdx-git-delta
-          npm install
-          sfdx plugins:link .
-
-
-      # 10. Deploy Delta to UAT
-      #- name: Deploy to UAT Org
-        #run: |
-          #echo "Authenticating to UAT using stored access token..."
-          #sfdx force:config:set instanceUrl=$UAT_INSTANCE_URL
-          #sfdx force:auth:accesstoken:store -a UAT -r $UAT_INSTANCE_URL -p $UAT_ACCESS_TOKEN
-          #sfdx force:source:deploy -u UAT -x delta/package/package.xml --testlevel RunLocalTests --wait 10
+          echo "Authenticating to UAT using stored access token..."
+          sfdx force:config:set instanceUrl=$UAT_INSTANCE_URL
+          sfdx force:auth:accesstoken:store -a UAT -r $UAT_INSTANCE_URL -p $UAT_ACCESS_TOKEN
+          sfdx force:source:deploy -u UAT -x delta/package/package.xml --testlevel RunLocalTests --wait 10
