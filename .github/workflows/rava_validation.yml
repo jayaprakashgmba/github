@@ -51,11 +51,13 @@ jobs:
           sfdx sgd:source:delta --to HEAD --from origin/main --output delta --generate-delta
 
       # 9. Create Folder Named After Branch and Copy Delta Code
-      - name: Organize Delta Package by Branch
+      - name: Generate Delta Package
         run: |
-          mkdir -p $BRANCH_NAME
-          cp -r delta/package/* $BRANCH_NAME/
-          cp delta/package.xml $BRANCH_NAME/
+          git fetch origin main
+          git diff --name-only origin/main...HEAD
+          sfdx sgd:source:delta --to HEAD --from origin/main --output delta --generate-delta
+          echo "Delta package contents:"
+          ls -R delta || echo "No delta folder created"
 
       # 10. Deploy Delta to UAT
       #- name: Deploy to UAT Org
