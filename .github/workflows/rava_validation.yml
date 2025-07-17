@@ -4,45 +4,64 @@ on:
   push:
     branches:
       - main
+      - 'feature/**'  # Optional: supports feature branches
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout the repo
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Needed for git diff between branches
 
-      - uses: karamchandanid/sfdc-credentials-auth@v2
-        id: sfdc_auth
+      # 2. Authenticate to Dev Org
+      - uses: sfdc-credentials-auth@v2
+        id: dev_auth
         with:
           sfdc_client_id: ${{ secrets.SFDC_CLIENT_ID }}
           sfdc_client_secret: ${{ secrets.SFDC_CLIENT_SECRET }}
           user_name: ${{ secrets.SFDC_DEV_USERNAME }}
           password: ${{ secrets.SFDC_DEV_PASSWORD }}
-          login_url: https://orgfarm-ea4276b2f3-dev-ed.develop.my.salesforce.com
+          login_url: https://orgfarm-ea4276b2f3-dev-ed.develop.my.salesforce.com  # or sandbox URL if it's a sandbox
 
 
+      # 4. Set Auth Environment Variables
       - name: Set Auth Environment Variables
         run: |
-          echo "ACCESS_TOKEN=${{ steps.sfdc_auth.outputs.access_token }}" >> $GITHUB_ENV
-          echo "INSTANCE_URL=${{ steps.sfdc_auth.outputs.instance_url }}" >> $GITHUB_ENV
+          echo "DEV_ACCESS_TOKEN=${{ steps.dev_auth.outputs.access_token }}" >> $GITHUB_ENV
+          echo "DEV_INSTANCE_URL=${{ steps.dev_auth.outputs.instance_url }}" >> $GITHUB_ENV
 
+      # 5. Install Salesforce CLI
       - name: Install Salesforce CLI
-        run: |
-          npm install --global sfdx-cli
+        run: npm install --global sfdx-cli
 
+      # 6. Install sfdx-git-delta Plugin
       - name: Install sfdx-git-delta Plugin
-        run: |
-          sfdx plugins:install sfdx-git-delta
+        run: sfdx plugins:install sfdx-git-delta
 
+      # 7. Get Current Branch Name
+      - name: Get Current Branch Name
+        run: echo "BRANCH_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
+      # 8. Generate Delta Package
       - name: Generate Delta Package
         run: |
           git fetch origin main
-          git diff --name-only origin/main...HEAD
           sfdx sgd:source:delta --to HEAD --from origin/main --output delta --generate-delta
 
-      - name: Deploy Delta to UAT
+      # 9. Create Folder Named After Branch and Copy Delta Code
+      - name: Organize Delta Package by Branch
         run: |
+          mkdir -p $BRANCH_NAME
+          cp -r delta/package/* $BRANCH_NAME/
+          cp delta/package.xml $BRANCH_NAME/
 
-          sfdx force:auth:jwt:grant --clientid ${{ secrets.SFDC_CLIENT_ID }} --jwtkeyfile assets/server.key --username ${{ secrets.SFDC_UAT_USERNAME }} --instanceurl https://orgfarm-ea4276b2f3-dev-ed.develop.my.salesforce.com -a UAT
-          sfdx force:source:deploy -u UAT -x delta/package/package.xml --testlevel RunLocalTests --wait 10
+      # 10. Deploy Delta to UAT
+      #- name: Deploy to UAT Org
+        #run: |
+          #echo "Authenticating to UAT using stored access token..."
+          #sfdx force:config:set instanceUrl=$UAT_INSTANCE_URL
+          #sfdx force:auth:accesstoken:store -a UAT -r $UAT_INSTANCE_URL -p $UAT_ACCESS_TOKEN
+          #sfdx force:source:deploy -u UAT -x delta/package/package.xml --testlevel RunLocalTests --wait 10
