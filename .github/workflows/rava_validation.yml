@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - 'feature/**'  # Optional: supports feature branches
 
 jobs:
   deploy:
@@ -17,7 +16,7 @@ jobs:
           fetch-depth: 0  # Needed for git diff between branches
 
       # 2. Authenticate to Dev Org
-      - uses: sfdc-credentials-auth@v2
+      - uses: karamchandanid/sfdc-credentials-auth@v2
         id: dev_auth
         with:
           sfdc_client_id: ${{ secrets.SFDC_CLIENT_ID }}
