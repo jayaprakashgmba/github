@@ -41,7 +41,9 @@ jobs:
         run: |
           npm install -g sfdx-cli
           sfdx plugins:install sfdx-git-delta
-          sfdx plugins  # List installed plugins to verify
+          sfdx plugins
+
+
       - name: Install sfdx-git-delta via GitHub
         run: |
           npm install -g sfdx-cli
@@ -74,7 +76,9 @@ jobs:
        #10. Deploy Delta to main
       - name: Deploy to UAT Org
         run: |
-          echo "Authenticating to UAT using stored access token..."
+          echo "Authenticating to UAT using access token..."
           sfdx force:config:set instanceUrl=$UAT_INSTANCE_URL
-          sfdx force:auth:accesstoken:store -a UAT -r $UAT_INSTANCE_URL -p $UAT_ACCESS_TOKEN
+          echo "$UAT_ACCESS_TOKEN" > uat-token.txt
+          sfdx auth:accesstoken:store --instance-url $UAT_INSTANCE_URL --access-token $UAT_ACCESS_TOKEN --set-default --alias UAT
           sfdx force:source:deploy -u UAT -x delta/package/package.xml --testlevel RunLocalTests --wait 10
+
