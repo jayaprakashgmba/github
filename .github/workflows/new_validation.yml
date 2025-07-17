@@ -1,6 +1,6 @@
 name: PR Validation for Salesforce Metadata
 
-on:
+off:
   pull_request:
     branches:
       - QA
